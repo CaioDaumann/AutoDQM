@@ -18,6 +18,14 @@ def process(chunk_index, chunk_size, config_dir,
             ref_series, ref_sample, ref_runs, ref_paths,
             output_dir='./out/', plugin_dir='./plugins/'):
 
+    """
+    print( ref_series )
+    print(dqmSource)
+    print(subsystem)
+    print(ref_runs)
+    exit()
+    """
+    
     # Ensure no graphs are drawn to screen and no root messages are sent to
     # terminal
     histpairs = compile_histpairs(chunk_index, chunk_size, config_dir,
@@ -98,6 +106,20 @@ def compile_histpairs(chunk_index, chunk_size, config_dir,
     data_file = uproot.open(data_path)
     ref_files = [uproot.open(ref_path) for ref_path in ref_paths]
 
+    #####
+    # Working with this loop here!
+
+    print(data_file  )
+    print( ref_files )
+    print( conf_list )
+    for hconf in conf_list:
+        print(hconf.keys())
+    print( '====================================' )
+    #exit()
+    # comment to know where the offline example files where
+    #print( '\n\nPath of this histograms? - ', data_path )
+    #exit()
+
     histPairs = []
     
     missing_data_dirs = []
@@ -161,6 +183,20 @@ def compile_histpairs(chunk_index, chunk_size, config_dir,
             # Check entire directory for files matching wildcard (Throw out wildcards with / in them as they are not plottable)
             for name in data_keys:
                 if h.split("*")[0] in str(name) and all([ name in ref_keys for ref_keys in ref_keyss ]) and not "<" in str(name):
+                    # All these coments were for test only!
+                    #print( 'Loop two!', ref_keyss  )
+                    #print(  data_dir["DT_chamberEff_allCh;1"].values() )
+                    #exit()
+                    #print( 'Name:', name[:-2] )
+                    #print( '\n\n' )
+                    #data_hist = data_dir["hResDist_W1_St2_Sec8_SL1;1"]
+                    
+                    # New tests ONLINE version!
+                    #data_hist = data_dir["OccupancyAllHits_perCh_W1_St2_Sec8;1"]
+                    #print( data_dir["TM_BXvsQual_In_W1_Sec8_St2;1"]  )
+                    #print( data_keys )
+                    #exit()
+                    
                     if("/" not in name[:-2]):
                         try:
                             data_hist = data_dir[name[:-2]]

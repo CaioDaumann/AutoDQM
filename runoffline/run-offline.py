@@ -29,7 +29,7 @@ def autodqm_offline(dqmSource, subsystem,
     print("Using cert/key pair:")
     print("\tCertificate: {}".format(sslcert))
     print("\tKey: {}".format(sslkey))
-    cert = make_cert(sslcert, sslkey)
+    cert = make_cert(sslcert, sslkey) # Aqui ele pega a path dos certificados?
 
     # Get root files
     with DQMSession(cert, db) as dqm:
@@ -50,14 +50,27 @@ def autodqm_offline(dqmSource, subsystem,
                       ref_series, ref_sample, ref_runs.split('_'), ref_paths,
                       output_dir=output_dir, plugin_dir=plugin_dir)
 
+    #print( cfg_dir , dqmSource,  subsystem )
+    #exit()
+
     print("\nResults available in {}".format(output_dir))
     return results
 
-
+# What this function should do? - get the run file?
 def get_run(dqm, dqmSource, subsystem, series, sample, run):
     stream = dqm.stream_run(dqmSource, subsystem, series, sample, run)
-    first = next(stream)
-    path = first.path
+    print(dqmSource, subsystem, series, sample, run )
+    print( stream )
+    print( dqm.stream_run(dqmSource, subsystem, series, sample, run) )
+    aloha = 0
+    for obj in stream:
+        first = obj
+        aloha = obj.path
+    path = aloha
+
+    # The original was like below!
+    #first = next(stream)
+    #path = first.path
     if first.cur == first.total:
         print("Run cached at {}".format(path))
     else:
