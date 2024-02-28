@@ -79,22 +79,16 @@ class DQMSession(FuturesSession):
         run_path = self._run_path(dqmSource, subsystem, series, sample, run)
         run_dir = os.path.dirname(run_path)
 
-        print('1')
-
         if not os.path.exists(run_path):
-            print('1')
             _try_makedirs(run_dir)
-            print('1')
 
             runs = self.fetch_run_list(dqmSource, subsystem, series, sample, run)
             print( 'runs:', runs )
-            print('1')
 
             if dqmSource == 'Online':  ## Use cmsweb.cern.ch/dqm/offline/data/browse/ROOT/OnlineData/
                 print('Entrou2.1!')
                 if not subsystem in OnlineMap.keys():
                     raise error("dqm.py stream_run: {} not in OnlineMap".format(subsystem))
-                print('Entrou2!')
                 DQM_dir = OnlineMap[subsystem]
                 #print( DQM_dir )
                 run_info = next(r for r in runs if r.name == run and DQM_dir+'_R000' in r.full_name)
@@ -130,41 +124,36 @@ class DQMSession(FuturesSession):
 
     def fetch_sample_list(self, dqmSource, series):
         """Return DQMRows corresponding to the samples available under the given series."""
-        print(3)
         if VERBOSE: print('\ndqm.py fetch_sample_list(dqmSource = %s, series = %s)' % (dqmSource, series))
 
         series_rows = self.fetch_series_list(dqmSource)
-        print('Para antes:', 3)
-        print('series:', series)
-        series = "00035xxxx"
+        #print('Para antes:', 3)
+        #print('series:', series)
+        #series = "00035xxxx"
+        # It only look at the series? does not look into the data_sample?
         for r in series_rows:
             print(r.name)
             if r.name == series:
                 print('bora')
                 print('Aqui?:', r.url)
-        print( (r.url for r in series_rows if r.name == series) )
-        print('Aqui:', next((r.url for r in series_rows if r.name == series)))
+        #print( (r.url for r in series_rows if r.name == series) )
+        #print('Aqui:', next((r.url for r in series_rows if r.name == series)))
         url = next((r.url for r in series_rows if r.name == series))
-        print(3)
-        print(url)
         return _resolve(self._fetch_dqm_rows(url)).data
 
     def fetch_run_list(self, dqmSource, subsystem, series, sample, selRuns=None):
         """Return DQMRows corresponding to the runs available under the given series and sample."""
-        print( '2' )
         if VERBOSE: print('\ndqm.py fetch_run_list(dqmSource = %s, subsystem = %s, series = %s, sample = %s, selRuns = %s)' %
                           (dqmSource, subsystem, series, sample, selRuns))
         if selRuns and not all([len(str(selRun)) == 6 for selRun in selRuns.split('_')]):
             raise error("dqm.py fetch_run_list selRuns = {}, not 6 digits per run!".format(selRuns))
 
-        print( '2' )
+
 
         ## Get list of samples within a series
         ## For OfflineData, primary datasets within Run2018, Run2017, etc.
         ## For OnlineData/original, list of run ranges by first 2 digits of run
         sample_rows = self.fetch_sample_list(dqmSource, series)
-
-        print( '2' )
 
         if dqmSource == 'Online':
             macrorun_rows = sample_rows

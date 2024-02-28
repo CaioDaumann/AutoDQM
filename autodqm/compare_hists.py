@@ -33,7 +33,7 @@ def process(chunk_index, chunk_size, config_dir,
                                   data_series, data_sample, data_run, data_path,
                                   ref_series, ref_sample, ref_runs, ref_paths)
 
-    for d in [output_dir + s for s in ['/pdfs', '/jsons', '/pngs']]:
+    for d in [output_dir +  s+ f'/{subsystem}/{data_run}/'  for s in ['/pdfs', '/jsons', '/pngs']]:
         if not os.path.exists(d):
             os.makedirs(d)
 
@@ -51,7 +51,7 @@ def process(chunk_index, chunk_size, config_dir,
 
         for comp_name, comparator in comparators:
             result_id = identifier(hp, comp_name)
-            pdf_path = '{}/pdfs/{}.pdf'.format(output_dir, result_id)
+            pdf_path = '{}/pdfs/{}/{}/{}.pdf'.format(output_dir,subsystem,data_run ,result_id)
             json_path = '{}/jsons/{}.json'.format(output_dir, result_id)
             png_path = '{}/pngs/{}.png'.format(output_dir, result_id)
 
@@ -62,12 +62,30 @@ def process(chunk_index, chunk_size, config_dir,
                 if not results:
                     continue
 
-                # Make pdf
-                results.canvas.write_image(pdf_path)
+                #print(results.info["Max_Pull_Val"])
+                #print(pdf_path[:-3]+'txt')
+                #exit()
 
-                # Make png
-                subprocess.Popen(
-                    ['convert', '-density', '50', '-trim', '-fuzz', '1%', pdf_path, png_path])
+                # lets do the thresolhds stduies for everytsingle histogram
+                # not only those flagged as anomalous
+                with open(pdf_path[:-3]+'txt', 'w') as file:
+                    file.write(str(float(results.info["Max_Pull_Val"])))
+
+                # Make pdf
+                if results.show:
+                    print('BORAAA')
+                    results.canvas.write_image(pdf_path)
+
+                    # Make png
+                    subprocess.Popen(
+                                ['convert', '-density', '50', '-trim', '-fuzz', '1%', pdf_path, png_path])
+
+                    #results.info["Max_Pull_Val"]
+
+                #print(hp.data_name)
+                #print(results.info)
+                #print(results.show)
+                #exit()
 
                 # Make json
                 info = {
@@ -105,20 +123,6 @@ def compile_histpairs(chunk_index, chunk_size, config_dir,
     # ROOT files
     data_file = uproot.open(data_path)
     ref_files = [uproot.open(ref_path) for ref_path in ref_paths]
-
-    #####
-    # Working with this loop here!
-
-    print(data_file  )
-    print( ref_files )
-    print( conf_list )
-    for hconf in conf_list:
-        print(hconf.keys())
-    print( '====================================' )
-    #exit()
-    # comment to know where the offline example files where
-    #print( '\n\nPath of this histograms? - ', data_path )
-    #exit()
 
     histPairs = []
     
@@ -197,10 +201,43 @@ def compile_histpairs(chunk_index, chunk_size, config_dir,
                     #print( data_keys )
                     #exit()
                     
+                    #i = i+1
+                    #print(name[:-2])
+                    #print( data_dir[name[:-2]])
+
+                    #print(np.array(data_dir[name[:-2]].values()))
+                    #print(data_dir[name[:-2]].values())
+                    #print( '\n\n' )
+                    #data_dir[name[:-2]].values()[data_dir[name[:-2]].values() < 0] = 0
+                    #print(data_dir[name[:-2]].values())
+                    
+                    """
+                    ref_hists = [ref_dir[name[:-2]] for ref_dir in ref_dirs]
+
+                    for hist in ref_hists:
+                        hist.values()[hist.values() < 0] = 0
+
+                    #ref_hists = [hist.values()[hist.values() < 0] = 0 for hist in ref_hists]
+
+                    for hist in ref_hists:
+                        print(hist.values())
+
+                    print('E isso ai!')
+
+                    exit()
+                    """
+                    #data_dir[name[:-2]].values()[data_dir[name[:-2]].values() < 0] = 0
+
                     if("/" not in name[:-2]):
                         try:
                             data_hist = data_dir[name[:-2]]
                             ref_hists = [ref_dir[name[:-2]] for ref_dir in ref_dirs]
+
+                            # Setting any entries lower than zero to zero to avoid problems with the statistical tests
+                            data_hist.values()[data_hist.values() < 0] = 0
+                            for hist in ref_hists:
+                                hist.values()[hist.values() < 0] = 0
+
                         except Exception as e:
                             continue
                         hPair = HistPair(dqmSource, hconf,

@@ -10,6 +10,11 @@
     "CSC": "CSC",
     "RPC": "RPC",
     "DT": "DT",
+    "DOC1_DT": "DT",
+    "DOC1_DT_Timebox": "DT",
+    "DOC1_DT_Occupancy": "DT",
+    "DOC1_DT_Trigger": "DT",
+    "DOC1_DT_FULL": "DT",
     "HCAL": "Hcal",
     "GEM": "GEM"
   }
