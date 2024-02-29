@@ -19,7 +19,7 @@ def autodqm_offline(dqmSource, subsystem,
                     data_run, data_sample, data_series,
                     ref_runs, ref_sample, ref_series,
                     cfg_dir, output_dir, plugin_dir,
-                    sslcert, sslkey, db):
+                    sslcert, sslkey, db,threshold):
 
     if not ref_sample:
         ref_sample = data_sample
@@ -48,7 +48,7 @@ def autodqm_offline(dqmSource, subsystem,
     results = process(0, 9999, cfg_dir, dqmSource, subsystem,
                       data_series, data_sample, data_run, data_path,
                       ref_series, ref_sample, ref_runs.split('_'), ref_paths,
-                      output_dir=output_dir, plugin_dir=plugin_dir)
+                      output_dir=output_dir, plugin_dir=plugin_dir, threshold=threshold)
 
     #print( cfg_dir , dqmSource,  subsystem )
     #exit()
@@ -129,6 +129,9 @@ if __name__ == '__main__':
     parser.add_argument('--sslkey', type=str, default=os.environ['ADQM_SSLKEY'],
                         help="path to a CMS VO private key")
 
+    parser.add_argument('--threshold', type=float, default=None,
+                        help="Threshold of the beta_binomial test")
+
     args = parser.parse_args()
 
     sslcert = find_file(args.sslcert)
@@ -140,4 +143,4 @@ if __name__ == '__main__':
                     cfg_dir=args.config,
                     output_dir=args.output,
                     plugin_dir=args.plugins,
-                    sslcert=sslcert, sslkey=sslkey, db=args.db)
+                    sslcert=sslcert, sslkey=sslkey, db=args.db, threshold=args.threshold)

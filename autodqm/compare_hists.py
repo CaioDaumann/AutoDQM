@@ -16,7 +16,7 @@ def process(chunk_index, chunk_size, config_dir,
             dqmSource, subsystem,
             data_series, data_sample, data_run, data_path,
             ref_series, ref_sample, ref_runs, ref_paths,
-            output_dir='./out/', plugin_dir='./plugins/'):
+            output_dir='./out/', plugin_dir='./plugins/', threshold=10):
 
     """
     print( ref_series )
@@ -56,7 +56,7 @@ def process(chunk_index, chunk_size, config_dir,
             png_path = '{}/pngs/{}.png'.format(output_dir, result_id)
 
             if not os.path.isfile(json_path):
-                results = comparator(hp, **hp.config)
+                results = comparator(hp, **hp.config, chi2_cut=threshold, pull_cut=threshold)
 
                 # Continue if no results
                 if not results:
