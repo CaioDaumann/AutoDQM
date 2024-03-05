@@ -1,4 +1,4 @@
-name: autodqm-2
+name: autodqm
 channels:
   - conda-forge
   - defaults

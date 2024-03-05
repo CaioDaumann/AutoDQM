@@ -29,7 +29,7 @@ def autodqm_offline(dqmSource, subsystem,
     print("Using cert/key pair:")
     print("\tCertificate: {}".format(sslcert))
     print("\tKey: {}".format(sslkey))
-    cert = make_cert(sslcert, sslkey) # Aqui ele pega a path dos certificados?
+    cert = make_cert(sslcert, sslkey) 
 
     # Get root files
     with DQMSession(cert, db) as dqm:

@@ -24,9 +24,7 @@ CA_PATH = 'CERN_Root_CA.crt'
 StreamProg = namedtuple('StreamProg', ('cur', 'total', 'path'))
 DQMRow = namedtuple('DQMRow', ('name', 'full_name', 'url', 'size', 'date'))
 
-path_by_hand = "/net/scratch_cms3a/daumann/qualification_task_muons/AutoDQM/config/"
-
-main_config = cfg.get_main(path_by_hand)
+main_config = cfg.get_main(os.environ['ADQM_CONFIG'])
 OnlineMap = main_config["OnlineDataMap"]
 
 
