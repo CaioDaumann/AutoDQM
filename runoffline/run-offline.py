@@ -55,8 +55,15 @@ def autodqm_offline(dqmSource, subsystem,
 
 def get_run(dqm, dqmSource, subsystem, series, sample, run):
     stream = dqm.stream_run(dqmSource, subsystem, series, sample, run)
-    first = next(stream)
-    path = first.path
+    aloha = 0
+    for obj in stream:
+        first = obj
+        aloha = obj.path
+    path = aloha
+
+    # The original was like below!
+    #first = next(stream)
+    #path = first.path
     if first.cur == first.total:
         print("Run cached at {}".format(path))
     else:
