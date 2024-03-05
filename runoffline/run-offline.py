@@ -53,7 +53,6 @@ def autodqm_offline(dqmSource, subsystem,
     print("\nResults available in {}".format(output_dir))
     return results
 
-# What this function should do? - get the run file?
 def get_run(dqm, dqmSource, subsystem, series, sample, run):
     stream = dqm.stream_run(dqmSource, subsystem, series, sample, run)
     aloha = 0
