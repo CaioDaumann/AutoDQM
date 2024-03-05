@@ -36,8 +36,6 @@ class DQMSession(FuturesSession):
     def __init__(self, cert, db, cache=None, workers=16):
         super(DQMSession, self).__init__(max_workers=workers)
 
-        print('Aqui pelo menos?')
-
         self.db = db
         if cache:
             self.cache = cache
@@ -70,7 +68,6 @@ class DQMSession(FuturesSession):
         return path
 
     def stream_run(self, dqmSource, subsystem, series, sample, run, chunk_size=4096):
-        print('\n\n\nEntra pelo menos?\n\n\n\n')
         """Stream and cache a run data file.
         Returns a generator that yields StreamProg tuples corresponding to the download progress."""
         if VERBOSE: print('\ndqm.py stream_run(dqmSource = %s, subsystem = %s, series = %s, sample = %s, run = %s, chunk_size = %d)' %
@@ -83,21 +80,16 @@ class DQMSession(FuturesSession):
             _try_makedirs(run_dir)
 
             runs = self.fetch_run_list(dqmSource, subsystem, series, sample, run)
-            print( 'runs:', runs )
 
             if dqmSource == 'Online':  ## Use cmsweb.cern.ch/dqm/offline/data/browse/ROOT/OnlineData/
-                print('Entrou2.1!')
                 if not subsystem in OnlineMap.keys():
                     raise error("dqm.py stream_run: {} not in OnlineMap".format(subsystem))
                 DQM_dir = OnlineMap[subsystem]
-                #print( DQM_dir )
                 run_info = next(r for r in runs if r.name == run and DQM_dir+'_R000' in r.full_name)
             else:                   ## Use cmsweb.cern.ch/dqm/offline/data/browse/ROOT/OfflineData/
                 ## Prefer PromptReco over other processings
                 try:    run_info = next(r for r in runs if r.name == run and 'PromptReco' in r.full_name)
                 except: run_info = next(r for r in runs if r.name == run)
-
-            print('Passou!')
 
             for prog in self._stream_file(
                     run_info.url, run_path, chunk_size=chunk_size):
@@ -127,17 +119,6 @@ class DQMSession(FuturesSession):
         if VERBOSE: print('\ndqm.py fetch_sample_list(dqmSource = %s, series = %s)' % (dqmSource, series))
 
         series_rows = self.fetch_series_list(dqmSource)
-        #print('Para antes:', 3)
-        #print('series:', series)
-        #series = "00035xxxx"
-        # It only look at the series? does not look into the data_sample?
-        for r in series_rows:
-            print(r.name)
-            if r.name == series:
-                print('bora')
-                print('Aqui?:', r.url)
-        #print( (r.url for r in series_rows if r.name == series) )
-        #print('Aqui:', next((r.url for r in series_rows if r.name == series)))
         url = next((r.url for r in series_rows if r.name == series))
         return _resolve(self._fetch_dqm_rows(url)).data
 

@@ -17,14 +17,6 @@ def process(chunk_index, chunk_size, config_dir,
             data_series, data_sample, data_run, data_path,
             ref_series, ref_sample, ref_runs, ref_paths,
             output_dir='./out/', plugin_dir='./plugins/', threshold=10):
-
-    """
-    print( ref_series )
-    print(dqmSource)
-    print(subsystem)
-    print(ref_runs)
-    exit()
-    """
     
     # Ensure no graphs are drawn to screen and no root messages are sent to
     # terminal
@@ -62,30 +54,17 @@ def process(chunk_index, chunk_size, config_dir,
                 if not results:
                     continue
 
-                #print(results.info["Max_Pull_Val"])
-                #print(pdf_path[:-3]+'txt')
-                #exit()
-
-                # lets do the thresolhds stduies for everytsingle histogram
-                # not only those flagged as anomalous
+                # lets write the thresolhds for every single histogram not only those flagged as anomalous
                 with open(pdf_path[:-3]+'txt', 'w') as file:
                     file.write(str(float(results.info["Max_Pull_Val"])))
 
                 # Make pdf
                 if results.show:
-                    print('BORAAA')
                     results.canvas.write_image(pdf_path)
 
                     # Make png
                     subprocess.Popen(
                                 ['convert', '-density', '50', '-trim', '-fuzz', '1%', pdf_path, png_path])
-
-                    #results.info["Max_Pull_Val"]
-
-                #print(hp.data_name)
-                #print(results.info)
-                #print(results.show)
-                #exit()
 
                 # Make json
                 info = {
@@ -187,46 +166,6 @@ def compile_histpairs(chunk_index, chunk_size, config_dir,
             # Check entire directory for files matching wildcard (Throw out wildcards with / in them as they are not plottable)
             for name in data_keys:
                 if h.split("*")[0] in str(name) and all([ name in ref_keys for ref_keys in ref_keyss ]) and not "<" in str(name):
-                    # All these coments were for test only!
-                    #print( 'Loop two!', ref_keyss  )
-                    #print(  data_dir["DT_chamberEff_allCh;1"].values() )
-                    #exit()
-                    #print( 'Name:', name[:-2] )
-                    #print( '\n\n' )
-                    #data_hist = data_dir["hResDist_W1_St2_Sec8_SL1;1"]
-                    
-                    # New tests ONLINE version!
-                    #data_hist = data_dir["OccupancyAllHits_perCh_W1_St2_Sec8;1"]
-                    #print( data_dir["TM_BXvsQual_In_W1_Sec8_St2;1"]  )
-                    #print( data_keys )
-                    #exit()
-                    
-                    #i = i+1
-                    #print(name[:-2])
-                    #print( data_dir[name[:-2]])
-
-                    #print(np.array(data_dir[name[:-2]].values()))
-                    #print(data_dir[name[:-2]].values())
-                    #print( '\n\n' )
-                    #data_dir[name[:-2]].values()[data_dir[name[:-2]].values() < 0] = 0
-                    #print(data_dir[name[:-2]].values())
-                    
-                    """
-                    ref_hists = [ref_dir[name[:-2]] for ref_dir in ref_dirs]
-
-                    for hist in ref_hists:
-                        hist.values()[hist.values() < 0] = 0
-
-                    #ref_hists = [hist.values()[hist.values() < 0] = 0 for hist in ref_hists]
-
-                    for hist in ref_hists:
-                        print(hist.values())
-
-                    print('E isso ai!')
-
-                    exit()
-                    """
-                    #data_dir[name[:-2]].values()[data_dir[name[:-2]].values() < 0] = 0
 
                     if("/" not in name[:-2]):
                         try:

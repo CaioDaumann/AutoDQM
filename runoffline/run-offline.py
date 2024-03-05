@@ -50,18 +50,12 @@ def autodqm_offline(dqmSource, subsystem,
                       ref_series, ref_sample, ref_runs.split('_'), ref_paths,
                       output_dir=output_dir, plugin_dir=plugin_dir, threshold=threshold)
 
-    #print( cfg_dir , dqmSource,  subsystem )
-    #exit()
-
     print("\nResults available in {}".format(output_dir))
     return results
 
 # What this function should do? - get the run file?
 def get_run(dqm, dqmSource, subsystem, series, sample, run):
     stream = dqm.stream_run(dqmSource, subsystem, series, sample, run)
-    print(dqmSource, subsystem, series, sample, run )
-    print( stream )
-    print( dqm.stream_run(dqmSource, subsystem, series, sample, run) )
     aloha = 0
     for obj in stream:
         first = obj
@@ -129,7 +123,7 @@ if __name__ == '__main__':
     parser.add_argument('--sslkey', type=str, default=os.environ['ADQM_SSLKEY'],
                         help="path to a CMS VO private key")
 
-    parser.add_argument('--threshold', type=float, default=None,
+    parser.add_argument('--threshold', type=float, default=10,
                         help="Threshold of the beta_binomial test")
 
     args = parser.parse_args()
