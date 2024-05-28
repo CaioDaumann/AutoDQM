@@ -11,12 +11,15 @@ from autodqm.histpair import HistPair
 import plotly
 import numpy as np
 
+# Define the function to calculate thresholds!
+def func(x, a, b, c):
+    return a / (x + b) + c
 
 def process(chunk_index, chunk_size, config_dir,
             dqmSource, subsystem,
             data_series, data_sample, data_run, data_path,
             ref_series, ref_sample, ref_runs, ref_paths,
-            output_dir='./out/', plugin_dir='./plugins/', threshold=10):
+            output_dir='./out/', plugin_dir='./plugins/', threshold=2):
     
     # Ensure no graphs are drawn to screen and no root messages are sent to
     # terminal
@@ -33,6 +36,15 @@ def process(chunk_index, chunk_size, config_dir,
 
     comparator_funcs = load_comparators(plugin_dir)
 
+    # Reading the thresholds field in the .json
+    threshold_dict = False
+    try:
+        config = cfg.get_subsystem(config_dir, subsystem)
+        threshold_dict = config["thresholds"]
+        threshold_dict_fit = config["thresholds_fit"]
+    except:
+        pass
+
     for hp in histpairs:
         comparators = []
         for c in hp.comparators:
@@ -40,7 +52,7 @@ def process(chunk_index, chunk_size, config_dir,
                 comparators.append((c, comparator_funcs[c]))
             except:
                 raise error("Comparator {} was not found in {}/{}.".format(c, dqmSource, subsystem))
-
+        
         for comp_name, comparator in comparators:
             result_id = identifier(hp, comp_name)
             pdf_path = '{}/pdfs/{}/{}/{}.pdf'.format(output_dir,subsystem,data_run ,result_id)
@@ -48,16 +60,38 @@ def process(chunk_index, chunk_size, config_dir,
             png_path = '{}/pngs/{}.png'.format(output_dir, result_id)
 
             if not os.path.isfile(json_path):
-                results = comparator(hp, **hp.config, chi2_cut=threshold, pull_cut=threshold)
+                # These chi2 and MaxPull thresholds only apply to the beta-binomial test
+                if( comp_name == 'beta_binomial'): 
+                    # Reading different beta-binomial thresholds based on histogram type
+                    chi2_threshold, MaxPull_threshold = threshold, threshold
+                    if(threshold_dict):
+                        for entry in threshold_dict:
+                            if( entry["name"] in hp.data_name ):
+                                chi2_threshold = entry["threshold_Chi2"]
+                                MaxPull_threshold = entry["threshold_MaxPull"]
+                        for entry in threshold_dict_fit: 
+                            if(entry["name"] in hp.data_name):       
+                                MaxPull_params = entry["param_MaxPull"]
+                                Chi2_params = entry["param_Chi2"]
+                                MaxPull_threshold = func(len(ref_runs), MaxPull_params[0],MaxPull_params[1],MaxPull_params[2])
+                                chi2_threshold = func(len(ref_runs), Chi2_params[0],Chi2_params[1],Chi2_params[2])
+                    results = comparator(hp, **hp.config, chi2_cut=chi2_threshold, pull_cut= MaxPull_threshold, threshold_list = threshold_dict)
+                
+                else:
+                    results = comparator(hp, **hp.config)
 
                 # Continue if no results
                 if not results:
                     continue
 
                 # lets write the thresolhds for every single histogram not only those flagged as anomalous
-                with open(pdf_path[:-3]+'txt', 'w') as file:
+                with open(pdf_path[:-3]+'_pull.txt', 'w') as file:
                     file.write(str(float(results.info["Max_Pull_Val"])))
 
+                with open(pdf_path[:-3]+'_Chi2.txt', 'w') as file:
+                    file.write(str(float(results.info["Chi_Squared"])))
+            
+                    
                 # Make pdf
                 if results.show:
                     results.canvas.write_image(pdf_path)
@@ -65,7 +99,6 @@ def process(chunk_index, chunk_size, config_dir,
                     # Make png
                     subprocess.Popen(
                                 ['convert', '-density', '50', '-trim', '-fuzz', '1%', pdf_path, png_path])
-
                 # Make json
                 info = {
                     'id': result_id,
@@ -139,10 +172,10 @@ def compile_histpairs(chunk_index, chunk_size, config_dir,
         ref_keyss = [ref_dir.keys() for ref_dir in ref_dirs]
 
         valid_names = []
-
         # Add existing histograms that match h
         if "*" not in h:
             if h in [str(keys)[0:-2] for keys in data_keys] and all([ (h in [str(keys)[0:-2] for keys in ref_keys]) for ref_keys in ref_keyss ]):
+                
                 try:
                     data_hist = data_dir[h]
                     ref_hists = [ref_dir[h] for ref_dir in ref_dirs]

@@ -151,10 +151,10 @@ def main():
     # Make a json to all of this information! -----------
     
     # Array containing the number of reference runs to be use for the meta-studies and threshold testing!
-    n_ref_runs = [8,4,2,1]
+    n_ref_runs = [1,2,4,8]
     
     # Since things get a bit more unstable with lesses ref runs, we ran multiple times and average the thresholds!
-    n_trials = [5,6,6,6]
+    n_trials = [3,3,3,3]
     
     # Thresholds to be used in the meta-studies
     metastudies_thresholds = [0.95,0.8]
@@ -214,7 +214,7 @@ def main():
             
                 threshold = -1000
                 results = []
-                with ThreadPoolExecutor(max_workers=32) as executor:
+                with ThreadPoolExecutor(max_workers=30) as executor:
                     
                     # Prepare a list of tasks for the progress bar
                     tasks = {executor.submit(process_run, hist_type, data_run, bad_runs, debug, nRefRuns, online,threshold): (hist_type, data_run) for hist_type in histogram_type for data_run in data_runs}
