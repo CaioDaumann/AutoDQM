@@ -73,6 +73,9 @@ def process(chunk_index, chunk_size, config_dir,
                     if MaxPull_threshold > 36:
                         MaxPull_threshold = 36 
                     results = comparator(hp, **hp.config, chi2_cut=chi2_threshold, pull_cut= MaxPull_threshold)   
+                # autoencoder_for_dt Should be applied only in DT occupancy histograms!!
+                elif( comp_name == 'autoencoder_for_dt' and 'OccupancyAllHits_perCh' not in hp.data_name):# and 'OccupancyAllHits_perCh' not in hp.data_name and 'DOC1_DT_FULL' not in subsystem):
+                    continue
                 else:
                     results = comparator(hp, **hp.config)
                     
