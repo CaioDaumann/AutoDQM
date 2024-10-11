@@ -75,6 +75,12 @@ def process(chunk_index, chunk_size, config_dir,
                     if MaxPull_threshold > 36:
                         MaxPull_threshold = 36 
                     results = comparator(hp, **hp.config, chi2_cut=chi2_threshold, pull_cut= MaxPull_threshold, subsystem = subsystem )   
+                elif( comp_name == 'sample' and 'OccupancyAllHits_perCh' not in hp.data_name ):
+                    #print('sera - legiao urbana')
+                    continue
+                elif( comp_name == 'sample' and 'OccupancyAllHits_perCh' in hp.data_name ):
+                    #print('sera - legiao urbana')
+                    results = comparator(hp, **hp.config)
                 else:
                     results = comparator(hp, **hp.config)
                     
