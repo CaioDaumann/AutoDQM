@@ -57,8 +57,13 @@ def sample(histpair, **kwargs):
     # perhaps this should be done outside of the histograms loop? - How much time would that bring?
     
     # Load the ONNX model
-    onnx_model_path = "../models/autoencoder_dt/linear_embedding_conv_autoencoder.onnx"
-    session = ort.InferenceSession(onnx_model_path)
+    import os
+
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    onnx_model_path = os.path.join(script_dir, "../models/autoencoder_dt/linear_embedding_conv_autoencoder_test_version_fixed.onnx")
+    session = ort.InferenceSession(onnx_model_path)   
+    #onnx_model_path = "./models/autoencoder_dt/linear_embedding_conv_autoencoder.onnx"
+    #session = ort.InferenceSession(onnx_model_path)
     
     # Get the input and output names for the ONNX model
     input_name = session.get_inputs()[0].name
