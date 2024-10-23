@@ -14,43 +14,72 @@ def rebin_pull_hist(pull_hist_orig, nBinsUsed):
 
         import plugins.beta_binomial as bb
 
-        nBinsUsed_orig = nBinsUsed #np.count_nonzero(pull_hist_orig)	
+        nBinsUsed_orig = np.count_nonzero(pull_hist_orig)   
         pull_hist = pull_hist_orig.copy()
 
-	# Applying the hot-bin algorithm
+        # Just for validation
+        #if pull_hist.ndim == 1:
+        #    prh.plot_1d_rebinned_histo(pull_hist, rebin_x = 0, chi2 = np.square(pull_hist).sum() / nBinsUsed_orig, maxpull = 10, name = histpair.data_name ) 
+
+        # Applying the hot-bin algorithm
         pull_hist = substitute_max_bin_with_average(pull_hist)
 
-	# Store chi2 values
+        # Store chi2 values
         chi2_keep = []
         chi2_keep.append(np.square(pull_hist).sum() / nBinsUsed_orig)
         ## maxpull_keep = []
-	
+    
         # Padding the pull histogram
         pull_hist = pad_histogram(pull_hist)
 
-        nBinsX, nBinsY = np.shape(pull_hist)[0], np.shape(pull_hist)[1]
 
-        for rbX in range(1, int(np.sqrt(nBinsX))): 
-            if (nBinsX % rbX != 0): continue
-            for rbY in range(1, int(np.sqrt(nBinsY))):  
-                if (nBinsY % rbY != 0): continue     
-
-                pull_hist_rb = Rebin(pull_hist, rbX, rbY, pull = True)     
+        if pull_hist.ndim == 1:
+            
+            nBinsX = np.shape(pull_hist)[0]
+            
+            for rbX in range(1, int(np.sqrt(nBinsX))): 
+                if (nBinsX % rbX != 0): continue
+            
+                pull_hist_rb = Rebin_1d(pull_hist, rbX, pull = True)     
 
                 # Number of bins in the new histogram
                 nBinsUsed_rb = np.count_nonzero(pull_hist_rb)
-
-                # Calculate the scaled chi2 and MaxPull value for the rebinned histogram
+                    
                 if nBinsUsed_rb == 0: continue
                 scaler   = np.sqrt(nBinsUsed_orig / nBinsUsed_rb)
                 chi2     = scaler * np.square(pull_hist_rb).sum() / nBinsUsed_rb
-                ## max_pull = bb.maxPullNorm(np.amax(pull_hist_rb), nBinsUsed_rb)
-                ## min_pull = bb.maxPullNorm(np.amin(pull_hist_rb), nBinsUsed_rb)
-                ## if abs(min_pull) > max_pull:
-                    ## max_pull = min_pull  
 
                 chi2_keep.append(chi2)
-                ## maxpull_keep.append(max_pull)
+                
+                #prh.plot_1d_rebinned_histo(pull_hist_rb, rebin_x = rbX, chi2 = chi2, maxpull = 10, name = histpair.data_name ) 
+            
+        else:
+
+            nBinsX, nBinsY = np.shape(pull_hist)[0], np.shape(pull_hist)[1]
+
+            for rbX in range(1, int(np.sqrt(nBinsX))): 
+                if (nBinsX % rbX != 0): continue
+                for rbY in range(1, int(np.sqrt(nBinsY))):  
+                    if (nBinsY % rbY != 0): continue     
+
+                    pull_hist_rb = Rebin(pull_hist, rbX, rbY, pull = True)     
+
+                    # Number of bins in the new histogram
+                    nBinsUsed_rb = np.count_nonzero(pull_hist_rb)
+
+                    # Calculate the scaled chi2 and MaxPull value for the rebinned histogram
+                    if nBinsUsed_rb == 0: continue
+                    scaler   = np.sqrt(nBinsUsed_orig / nBinsUsed_rb)
+                    chi2     = scaler * np.square(pull_hist_rb).sum() / nBinsUsed_rb
+                    ## max_pull = bb.maxPullNorm(np.amax(pull_hist_rb), nBinsUsed_rb)
+                    ## min_pull = bb.maxPullNorm(np.amin(pull_hist_rb), nBinsUsed_rb)
+                    ## if abs(min_pull) > max_pull:
+                        ## max_pull = min_pull  
+
+                    #prh.plot_rebinned_histo(pull_hist_rb, rebin_x = rbX, rebin_y = rbY, chi2 = chi2, maxpull = 10, name = histpair.data_name ) 
+                    
+                    chi2_keep.append(chi2)
+                    ## maxpull_keep.append(max_pull)
 
         return np.max(chi2_keep)
 
@@ -76,6 +105,26 @@ def Rebin(hist, rbX, rbY, pull = True):
                     rebinned_hist[i, j] = int(hist[i*rbX:(i+1)*rbX, j*rbY:(j+1)*rbY].sum())
 
         return rebinned_hist     
+
+def Rebin_1d(hist, rbX, pull=True):
+    # Get the number of bins in the input histogram
+    x_bins = len(hist)
+    
+    # Calculate the number of bins in the rebinned histogram
+    new_x_bins = x_bins // rbX
+    
+    # Initialize the rebinned histogram
+    rebinned_hist = np.zeros(new_x_bins)
+    
+    # Loop over the new bins and sum the appropriate values
+    for i in range(new_x_bins):
+        # Sum the values in the current rebinning block
+        if pull:
+            rebinned_hist[i] = hist[i*rbX:(i+1)*rbX].sum() / rbX
+        else:
+            rebinned_hist[i] = int(hist[i*rbX:(i+1)*rbX].sum())
+    
+    return rebinned_hist
 
 def num_factors(nBins):
     nFact = 0
@@ -154,38 +203,66 @@ def substitute_max_bin_with_average(hist):
 
     # if the difference in chi2 is bigger than 10% of the original chi2, we will repeat the algorithm!
     ii = 0
-    max_iterations = int(np.sqrt(np.count_nonzero(hist))/5)
+    max_iterations = int(np.sqrt(np.count_nonzero(hist)))/5
 
     while 2 * (chi_before - chi_after) / (chi_before + chi_after) > 0.1 and ii < max_iterations:
         if ii != 0:
             chi_before = chi_after
 
-        rows, cols = hist.shape
-        max_bin_value = np.max(np.abs(hist))  # max of abs since we have positive and negative pulls
-        max_bin_indices = np.unravel_index(np.argmax(np.abs(hist), axis=None), hist.shape)
+        if hist.ndim == 1:
+            rows = np.array(hist.shape)
+            max_bin_value = np.max(np.abs(hist))
+            max_bin_indices = np.unravel_index(np.argmax(np.abs(hist), axis=None), hist.shape)
+            max_row = max_bin_indices
+            
+            surrounding_values = []
+            
+            for m in range(max_row[0] - 1, max_row[0] + 2):  
+                if (0 <= m < rows)  and not (m == max_row ):
+                        surrounding_values.append(hist[m])
 
-        max_row, max_col = max_bin_indices
+            # Calculate the average of the surrounding bins
+            if surrounding_values:
+                average_value = np.mean(surrounding_values)
+            else:
+                average_value = max_bin_value  
 
-        surrounding_values = []
+            # Substitute the maximum bin's value with the average value
+            hist[max_row] = average_value
 
-        # Collect values from the surrounding bins
-        for m in range(max_row - 1, max_row + 2):  
-            for n in range(max_col - 1, max_col + 2):
-                if (0 <= m < rows) and (0 <= n < cols) and not (m == max_row and n == max_col):
-                    surrounding_values.append(hist[m, n])
+            chi_after = np.square(hist).sum() + 1e-3  # adding a small value to avoid division by zero
 
-        # Calculate the average of the surrounding bins
-        if surrounding_values:
-            average_value = np.mean(surrounding_values)
+            ii += 1
+  
+        elif hist.ndim == 2:
+            rows, cols = hist.shape
+            max_bin_value = np.max(np.abs(hist))  # max of abs since we have positive and negative pulls
+            max_bin_indices = np.unravel_index(np.argmax(np.abs(hist), axis=None), hist.shape)
+            max_row, max_col = max_bin_indices
+
+            surrounding_values = []
+
+            # Collect values from the surrounding bins
+            for m in range(max_row - 1, max_row + 2):  
+                for n in range(max_col - 1, max_col + 2):
+                    if (0 <= m < rows) and (0 <= n < cols) and not (m == max_row and n == max_col):
+                        surrounding_values.append(hist[m, n])
+
+            # Calculate the average of the surrounding bins
+            if surrounding_values:
+                average_value = np.mean(surrounding_values)
+            else:
+                average_value = max_bin_value  
+
+            # Substitute the maximum bin's value with the average value
+            hist[max_row, max_col] = average_value
+
+            chi_after = np.square(hist).sum() + 1e-3  # adding a small value to avoid division by zero
+
+            ii += 1
+
+
         else:
-            average_value = max_bin_value  
+            raise ValueError("The input histogram must be 1D or 2D")
 
-        # Substitute the maximum bin's value with the average value
-        hist[max_row, max_col] = average_value
-
-        chi_after = np.square(hist).sum() + 1e-3  # adding a small value to avoid division by zero
-
-        ii += 1
-
-    return hist        
-
+    return hist  
